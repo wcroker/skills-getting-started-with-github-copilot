@@ -62,7 +62,19 @@ document.addEventListener("DOMContentLoaded", () => {
           const badge = document.createElement("span");
           badge.className = "participant-badge";
           badge.textContent = email;
+
+          const del = document.createElement("button");
+          del.className = "participant-delete";
+          del.title = "Remove participant";
+          del.type = "button";
+          del.innerHTML = "✖";
+          del.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            unregisterParticipant(name, email);
+          });
+
           li.appendChild(badge);
+          li.appendChild(del);
           list.appendChild(li);
         });
       } else {
@@ -96,6 +108,22 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       showMessage(err.message, "error");
       activitiesList.innerHTML = "<p>Unable to load activities.</p>";
+    }
+  }
+
+  async function unregisterParticipant(activityName, email) {
+    try {
+      const url = `/activities/${encodeURIComponent(activityName)}/participants?email=${encodeURIComponent(email)}`;
+      const res = await fetch(url, { method: "DELETE" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const detail = json.detail || json.message || "Failed to remove participant";
+        throw new Error(detail);
+      }
+      showMessage(json.message || "Participant removed", "success");
+      await loadActivities();
+    } catch (err) {
+      showMessage(err.message, "error");
     }
   }
 
